@@ -1,0 +1,6 @@
+[theme]
+base = "light"
+backgroundColor = "#fbfaf7"
+
+[client]
+toolbarMode = "minimal"
