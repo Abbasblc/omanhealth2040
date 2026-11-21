@@ -2,6 +2,7 @@
 evidence dashboard (Oman Vision 2040 health priority). Built only from public documents.
 The dashboard is stored encrypted; the password entered here is the decryption key."""
 import base64
+import hashlib
 from pathlib import Path
 
 import streamlit as st
@@ -15,10 +16,12 @@ st.markdown("""<style> header[data-testid="stHeader"], footer, #MainMenu, [data-
   [data-testid="stDecoration"] {display:none !important;} </style>""", unsafe_allow_html=True)
 
 ENC = Path(__file__).parent / "dashboard.enc"
+ENC_VERSION = hashlib.sha256(ENC.read_bytes()).hexdigest()[:16]
 
 
 @st.cache_data(show_spinner=False, max_entries=4)
-def decrypt(password: str):
+def decrypt(password: str, version: str):
+    # version (file hash) is part of the cache key, so a new dashboard.enc is never served from an old cache
     blob = ENC.read_bytes()
     salt, token = blob[:16], blob[16:]
     key = base64.urlsafe_b64encode(
@@ -29,7 +32,7 @@ def decrypt(password: str):
         return None
 
 
-html = st.session_state.get("html")
+html = st.session_state.get("html") if st.session_state.get("html_version") == ENC_VERSION else None
 if html is None:
     _, mid, _ = st.columns([1, 1.2, 1])
     with mid:
@@ -41,11 +44,12 @@ if html is None:
             ok = st.form_submit_button("Open · فتح", use_container_width=True)
         if ok:
             with st.spinner("Opening…"):
-                html = decrypt(pw.strip())
+                html = decrypt(pw.strip(), ENC_VERSION)
             if html is None:
                 st.error("Wrong password · كلمة المرور غير صحيحة")
             else:
                 st.session_state["html"] = html
+                st.session_state["html_version"] = ENC_VERSION
                 st.rerun()
     st.stop()
 
