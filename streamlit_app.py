@@ -49,9 +49,12 @@ if html is None:
                 st.rerun()
     st.stop()
 
+# Pin the dashboard to the viewport so only the dashboard scrolls (no second,
+# outer scroll that leaves an empty band under the page on shorter screens).
 st.markdown("""<style> .block-container {padding:0 !important; max-width:100% !important;}
-  [data-testid="stAppViewContainer"] > .main {padding:0 !important;}
-  iframe {height: 100vh !important; width: 100% !important; border: 0;} </style>""",
+  html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {overflow:hidden !important;}
+  iframe {position: fixed !important; inset: 0 !important; width: 100vw !important;
+          height: 100vh !important; height: 100dvh !important; border: 0; z-index: 10;} </style>""",
             unsafe_allow_html=True)
 if hasattr(st, "iframe"):
     st.iframe(html, height=900)
